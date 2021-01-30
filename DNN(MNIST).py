@@ -89,3 +89,58 @@ def fc(x):
 
 def y_CNN(x): 
     return tf.nn.softmax(fc(x))
+
+#>>>>>>>>>>>>>>>>>>Loss Function<<<<<<<<<<<<<<<<<<<<<<
+
+def cross_entropy(y_label, y_pred):
+    return (-tf.reduce_sum(y_label * tf.math.log(y_pred + 1.e-10)))
+
+#>>>>>>>>>>>>>>>>>>Optimizer Function<<<<<<<<<<<<<<<<<<<<<<
+
+optimizer = tf.keras.optimizers.Adam(1e-4)
+
+#>>>>>>>>>>>>>>>>>>Training<<<<<<<<<<<<<<<<<<<<<<
+
+variables = [W_conv1, b_conv1, W_conv2, b_conv2, 
+             W_fc1, b_fc1, W_fc2, b_fc2, ]
+
+def train_step(x, y):
+    with tf.GradientTape() as tape:
+        current_loss = cross_entropy( y, y_CNN( x ))
+        grads = tape.gradient( current_loss , variables )
+        optimizer.apply_gradients( zip( grads , variables ) )
+        return current_loss.numpy()
+
+correct_prediction = tf.equal(tf.argmax(y_CNN(x_image_train), axis=1), tf.argmax(y_train, axis=1))
+
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float32'))
+
+
+loss_values=[]
+accuracies = []
+epochs = 1
+
+for i in range(epochs):
+    j=0
+    # each batch has 50 examples
+    for x_train_batch, y_train_batch in train_ds2:
+        j+=1
+        current_loss = train_step(x_train_batch, y_train_batch)
+        if j%50==0: #reporting intermittent batch statistics
+            correct_prediction = tf.equal(tf.argmax(y_CNN(x_train_batch), axis=1),
+                                  tf.argmax(y_train_batch, axis=1))
+            #  accuracy
+            accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32)).numpy()
+            print("epoch ", str(i), "batch", str(j), "loss:", str(current_loss),
+                     "accuracy", str(accuracy)) 
+            
+    current_loss = cross_entropy( y_train, y_CNN( x_image_train )).numpy()
+    loss_values.append(current_loss)
+    correct_prediction = tf.equal(tf.argmax(y_CNN(x_image_train), axis=1),
+                                  tf.argmax(y_train, axis=1))
+    #  accuracy
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32)).numpy()
+    accuracies.append(accuracy)
+    print("end of epoch ", str(i), "loss", str(current_loss), "accuracy", str(accuracy) )  
+
+
