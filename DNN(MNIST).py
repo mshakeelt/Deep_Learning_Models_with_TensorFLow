@@ -29,6 +29,10 @@ x_image_test = tf.cast(x_image_test, 'float32')
 train_ds2 = tf.data.Dataset.from_tensor_slices((x_image_train, y_train)).batch(50)
 test_ds2 = tf.data.Dataset.from_tensor_slices((x_image_test, y_test)).batch(50)
 
+#Change the data size depending upon main memory
+#x_image_train = tf.slice(x_image_train,[0,0,0,0],[5000, 28, 28, 1])
+#y_train = tf.slice(y_train,[0,0],[5000, 10])
+
 #>>>>>>>>>>>>>>>>>>First layer<<<<<<<<<<<<<<<<<<<<<<
 
 W_conv1 = tf.Variable(tf.random.truncated_normal([5, 5, 1, 32], stddev=0.1, seed=0))
@@ -143,4 +147,18 @@ for i in range(epochs):
     accuracies.append(accuracy)
     print("end of epoch ", str(i), "loss", str(current_loss), "accuracy", str(accuracy) )  
 
+#>>>>>>>>>>>>>>>>>>Evaluation<<<<<<<<<<<<<<<<<<<<<<
 
+j=0
+accuracies=[]
+# evaluate accuracy by batch and average...reporting every 100th batch
+for x_train_batch, y_train_batch in train_ds2:
+        j+=1
+        correct_prediction = tf.equal(tf.argmax(y_CNN(x_train_batch), axis=1),
+                                  tf.argmax(y_train_batch, axis=1))
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32)).numpy()
+        accuracies.append(accuracy)
+        if j%100==0:
+            print("batch", str(j), "accuracy", str(accuracy) ) 
+import numpy as np
+print("accuracy of entire set", str(np.mean(accuracies)))            
