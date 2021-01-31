@@ -1,6 +1,9 @@
 import numpy as np
 import tensorflow as tf
 
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
 LSTM_CELL_SIZE = 4  # output size (dimension), which is same as hidden size in the cell
 
 state = (tf.zeros([1,LSTM_CELL_SIZE]),)*2
@@ -24,6 +27,44 @@ new_shape = (batch_size, sentence_max_length, n_features)
 inputs = tf.constant(np.reshape(sample_input, new_shape), dtype = tf.float32)
 
 output, final_memory_state, final_carry_state = lstm(inputs)
+
+print('Output : ', tf.shape(output))
+
+print('Memory : ',tf.shape(final_memory_state))
+
+print('Carry state : ',tf.shape(final_carry_state))
+
+#Stacked LSTM
+
+cells = []
+
+#First layer
+LSTM_CELL_SIZE_1 = 4 #4 hidden nodes
+cell1 = tf.keras.layers.LSTMCell(LSTM_CELL_SIZE_1)
+cells.append(cell1)
+
+#Second Layer
+LSTM_CELL_SIZE_2 = 5 #5 hidden nodes
+cell2 = tf.keras.layers.LSTMCell(LSTM_CELL_SIZE_2)
+cells.append(cell2)
+
+#Stacking
+stacked_lstm =  tf.keras.layers.StackedRNNCells(cells)
+
+#RNN
+lstm_layer= tf.keras.layers.RNN(stacked_lstm ,return_sequences=True, return_state=True)
+#Batch size x time steps x features.
+sample_input = [[[1,2,3,4,3,2], [1,2,1,1,1,2],[1,2,2,2,2,2]],[[1,2,3,4,3,2],[3,2,2,1,1,2],[0,0,0,0,3,2]]]
+sample_input
+
+batch_size = 2
+time_steps = 3
+features = 6
+new_shape = (batch_size, time_steps, features)
+
+x = tf.constant(np.reshape(sample_input, new_shape), dtype = tf.float32)
+
+output, final_memory_state, final_carry_state  = lstm_layer(x)
 
 print('Output : ', tf.shape(output))
 
