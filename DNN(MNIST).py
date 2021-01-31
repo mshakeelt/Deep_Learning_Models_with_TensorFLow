@@ -1,5 +1,8 @@
 import tensorflow as tf
 
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
 mnist = tf.keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 x_train, x_test = x_train / 255.0, x_test / 255.0
@@ -30,8 +33,8 @@ train_ds2 = tf.data.Dataset.from_tensor_slices((x_image_train, y_train)).batch(5
 test_ds2 = tf.data.Dataset.from_tensor_slices((x_image_test, y_test)).batch(50)
 
 #Change the data size depending upon main memory
-#x_image_train = tf.slice(x_image_train,[0,0,0,0],[5000, 28, 28, 1])
-#y_train = tf.slice(y_train,[0,0],[5000, 10])
+x_image_train = tf.slice(x_image_train,[0,0,0,0],[1000, 28, 28, 1])
+y_train = tf.slice(y_train,[0,0],[1000, 10])
 
 #>>>>>>>>>>>>>>>>>>First layer<<<<<<<<<<<<<<<<<<<<<<
 
