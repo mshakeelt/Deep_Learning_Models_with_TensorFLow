@@ -94,3 +94,20 @@ init_state = tf.Variable(tf.zeros([batch_size,embeding_vector_size]),trainable=F
 layer.inital_state = init_state
 outputs = layer(inputs)
 print(outputs)
+
+#Dense Layer
+dense = tf.keras.layers.Dense(vocab_size)
+logits_outputs  = dense(outputs)
+print("shape of the output from dense layer: ", logits_outputs.shape) #(batch_size, sequence_length, vocab_size)
+
+#Activation layer
+activation = tf.keras.layers.Activation('softmax')
+output_words_prob = activation(logits_outputs)
+print("shape of the output from the activation layer: ", output_words_prob.shape) #(batch_size, sequence_length, vocab_size)
+print("The probability of observing words in t=0 to t=20", output_words_prob[0,0:num_steps])
+
+#Prediction
+print(np.argmax(output_words_prob[0,0:num_steps], axis=1))
+print(_targets[0])
+
+
