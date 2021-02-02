@@ -55,3 +55,24 @@ data_dir = "data/simple-examples/data/"
 raw_data = reader.ptb_raw_data(data_dir)
 train_data, valid_data, test_data, vocab, word_to_id = raw_data
 
+print(len(train_data))
+
+def id_to_word(id_list):
+    line = []
+    for w in id_list:
+        for word, wid in word_to_id.items():
+            if wid == w:
+                line.append(word)
+    return line            
+                
+
+print(id_to_word(train_data[0:100]))
+
+itera = reader.ptb_iterator(train_data, batch_size, num_steps)
+first_touple = itera.__next__()
+_input_data = first_touple[0]
+_targets = first_touple[1]
+print(_input_data[0:3])
+
+print(id_to_word(_input_data[0,:]))
+
