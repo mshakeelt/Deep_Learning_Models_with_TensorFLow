@@ -76,3 +76,21 @@ print(_input_data[0:3])
 
 print(id_to_word(_input_data[0,:]))
 
+#>>>>>>>>>>>>>>Embedding<<<<<<<<<<<<<<
+embedding_layer = tf.keras.layers.Embedding(vocab_size, embeding_vector_size,batch_input_shape=(batch_size, num_steps),trainable=True,name="embedding_vocab")  
+
+inputs = embedding_layer(_input_data)
+print(inputs)
+
+#>>>>>>>>Constructing Recurrent Neural Networks<<<<<<<
+lstm_cell_l1 = tf.keras.layers.LSTMCell(hidden_size_l1)
+lstm_cell_l2 = tf.keras.layers.LSTMCell(hidden_size_l2)
+#stacking
+stacked_lstm = tf.keras.layers.StackedRNNCells([lstm_cell_l1, lstm_cell_l2])
+
+layer  =  tf.keras.layers.RNN(stacked_lstm,[batch_size, num_steps],return_state=False,stateful=True,trainable=True)
+#initial states
+init_state = tf.Variable(tf.zeros([batch_size,embeding_vector_size]),trainable=False)
+layer.inital_state = init_state
+outputs = layer(inputs)
+print(outputs)
