@@ -110,4 +110,43 @@ print("The probability of observing words in t=0 to t=20", output_words_prob[0,0
 print(np.argmax(output_words_prob[0,0:num_steps], axis=1))
 print(_targets[0])
 
+#Loss definition
+def crossentropy(y_true, y_pred):
+    return tf.keras.losses.sparse_categorical_crossentropy(y_true, y_pred)
 
+loss  = crossentropy(_targets, output_words_prob)
+print(loss[0,:10])
+cost = tf.reduce_sum(loss / batch_size)
+print(cost)
+
+#>>>>>>>>>>>>>>>>>>Training<<<<<<<<<<<<<<<<<<
+
+#Optimizer
+# Create a variable for the learning rate
+lr = tf.Variable(0.0, trainable=False)
+optimizer = tf.keras.optimizers.SGD(lr=lr, clipnorm=max_grad_norm)
+
+#Assembling Layers
+model = tf.keras.Sequential()
+model.add(embedding_layer)
+model.add(layer)
+model.add(dense)
+model.add(activation)
+model.compile(loss=crossentropy, optimizer=optimizer)
+model.summary()
+
+# Get all TensorFlow variables marked as "trainable" (i.e. all of them except _lr, which we just created)
+tvars = model.trainable_variables
+print([v.name for v in tvars])
+
+#gradient
+with tf.GradientTape() as tape:
+    # Forward pass.
+    output_words_prob = model(_input_data)
+    # Loss value for this batch.
+    loss  = crossentropy(_targets, output_words_prob)
+    cost = tf.reduce_sum(loss,axis=0) / batch_size
+
+# Get gradients of loss wrt the trainable variables.
+grad_t_list = tape.gradient(cost, tvars)
+print(grad_t_list)
