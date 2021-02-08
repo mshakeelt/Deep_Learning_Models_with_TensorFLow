@@ -4,6 +4,8 @@ import numpy as np
 from PIL import Image
 from utils import tile_raster_images
 import matplotlib.pyplot as plt
+import wget
+import os
 
 with urllib.request.urlopen("https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-DL0120EN-SkillsNetwork/labs/Week4/data/utils.py") as url:
     response = url.read()
@@ -149,3 +151,45 @@ plt.ylabel("Error")
 plt.show()
 
 print(W.numpy()) # a weight matrix of shape (50,784)
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Visualizing Learned Features<<<<<<<<<<<<<<<<<<<<
+tile_raster_images(X=W.numpy().T, img_shape=(28, 28), tile_shape=(5, 10), tile_spacing=(1, 1))
+image = Image.fromarray(tile_raster_images(X=W.numpy().T, img_shape=(28, 28) ,tile_shape=(5, 10), tile_spacing=(1, 1)))
+### Plot image
+plt.rcParams['figure.figsize'] = (18.0, 18.0)
+imgplot = plt.imshow(image)
+imgplot.set_cmap('gray')
+
+image = Image.fromarray(tile_raster_images(X =W.numpy().T[10:11], img_shape=(28, 28),tile_shape=(1, 1), tile_spacing=(1, 1)))
+### Plot image
+plt.rcParams['figure.figsize'] = (4.0, 4.0)
+imgplot = plt.imshow(image)
+imgplot.set_cmap('gray')  
+
+#>>>>>>>>>>>>>>>>>>Evaluation<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+if os.path.isfile('destructed3.jpg') is False:
+    url = 'https://ibm.box.com/shared/static/vvm1b63uvuxq88vbw9znpwu5ol380mco.jpg'
+    wget.download(url, 'destructed3.jpg')
+img = Image.open('destructed3.jpg')
+
+# convert the image to a 1d numpy array
+sample_case = np.array(img.convert('I').resize((28,28))).ravel().reshape((1, -1))/255.0
+
+sample_case = tf.cast(sample_case, dtype=tf.float32)
+
+hh0_p = tf.nn.sigmoid(tf.matmul(sample_case, W) + hb)
+hh0_s = tf.round(hh0_p)
+
+print("Probability nodes in hidden layer:" ,hh0_p)
+print("activated nodes in hidden layer:" ,hh0_s)
+
+# reconstruct
+vv1_p = tf.nn.sigmoid(tf.matmul(hh0_s, tf.transpose(W)) + vb)
+
+print(vv1_p)
+#rec_prob = sess.run(vv1_p, feed_dict={ hh0_s: hh0_s_val, W: prv_w, vb: prv_vb})
+#Plot the reconstructed image
+img = Image.fromarray(tile_raster_images(X=vv1_p.numpy(), img_shape=(28, 28),tile_shape=(1, 1), tile_spacing=(1, 1)))
+plt.rcParams['figure.figsize'] = (4.0, 4.0)
+imgplot = plt.imshow(img)
+imgplot.set_cmap('gray') 
