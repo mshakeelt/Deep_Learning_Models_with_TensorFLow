@@ -95,3 +95,57 @@ def error(v0_state, v1_state):
 
 err = tf.reduce_mean(tf.square(v0_state - v1_state))
 print("error" , err.numpy())
+
+h1_prob = tf.nn.sigmoid(tf.matmul([v1_state], W) + hb)
+h1_state = tf.nn.relu(tf.sign(h1_prob - tf.random.uniform(tf.shape(h1_prob)))) #sample_h_given_X
+print("error: ", error(v0_state, v1_state))
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Training<<<<<<<<<<<<<<<<<<<<<<<<
+
+#Parameters
+alpha = 0.01
+epochs = 1
+batchsize = 200
+weights = []
+errors = []
+batch_number = 0
+K = 1
+
+#creating datasets
+train_ds = \
+    tf.data.Dataset.from_tensor_slices((trX, trY)).batch(batchsize)
+
+for epoch in range(epochs):
+    for batch_x, batch_y in train_ds:
+        batch_number += 1
+        for i_sample in range(batchsize):           
+            for k in range(K):
+                v0_state = batch_x[i_sample]
+                h0_state = hidden_layer(v0_state, W, hb)
+                v1_state = reconstructed_output(h0_state, W, vb)
+                h1_state = hidden_layer(v1_state, W, hb)
+
+                delta_W = tf.matmul(tf.transpose([v0_state]), h0_state) - tf.matmul(tf.transpose([v1_state]), h1_state)
+                W = W + alpha * delta_W
+
+                vb = vb + alpha * tf.reduce_mean(v0_state - v1_state, 0)
+                hb = hb + alpha * tf.reduce_mean(h0_state - h1_state, 0) 
+
+                v0_state = v1_state
+
+            if i_sample == batchsize-1:
+                err = error(batch_x[i_sample], v1_state)
+                errors.append(err)
+                weights.append(W)
+                print ( 'Epoch: %d' % epoch, 
+                       "batch #: %i " % batch_number, "of %i" % int(60e3/batchsize), 
+                       "sample #: %i" % i_sample,
+                       'reconstruction error: %f' % err)
+
+
+plt.plot(errors)
+plt.xlabel("Batch Number")
+plt.ylabel("Error")
+plt.show()
+
+print(W.numpy()) # a weight matrix of shape (50,784)
