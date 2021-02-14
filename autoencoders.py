@@ -70,4 +70,58 @@ def decoder(x):
     decode = self.decoding_final(layer_2)
     return decode
 
-    
+#>>>>>>>>>>>>>>>model construction<<<<<<<<<<<
+
+class AutoEncoder(tf.keras.Model):
+    def __init__(self):
+        super(AutoEncoder, self).__init__()
+
+        self.n_hidden_1 = n_hidden_1 # 1st layer num features
+        self.n_hidden_2 = n_hidden_2 # 2nd layer num features
+        self.encoding_layer = encoding_layer
+        self.n_input = n_input # MNIST data input (img shape: 28*28)
+
+        self.flatten_layer = tf.keras.layers.Flatten()
+        self.enocoding_1 = tf.keras.layers.Dense(self.n_hidden_1, activation=tf.nn.sigmoid)
+        self.encoding_2 = tf.keras.layers.Dense(self.n_hidden_2, activation=tf.nn.sigmoid)
+        self.encoding_final = tf.keras.layers.Dense(self.encoding_layer, activation=tf.nn.relu)
+        self.decoding_1 = tf.keras.layers.Dense(self.n_hidden_2, activation=tf.nn.sigmoid)
+        self.decoding_2 = tf.keras.layers.Dense(self.n_hidden_1, activation=tf.nn.sigmoid)
+        self.decoding_final = tf.keras.layers.Dense(self.n_input)
+
+
+    # Building the encoder
+    def encoder(self,x):
+        #x = self.flatten_layer(x)
+        layer_1 = self.enocoding_1(x)
+        layer_2 = self.encoding_2(layer_1)
+        code = self.encoding_final(layer_2)
+        return code
+        
+
+    # Building the decoder
+    def decoder(self, x):
+        layer_1 = self.decoding_1(x)
+        layer_2 = self.decoding_2(layer_1)
+        decode = self.decoding_final(layer_2)
+        return decode
+
+        
+    def call(self, x):
+        encoder_op  = self.encoder(x)
+        # Reconstructed Images
+        y_pred = self.decoder(encoder_op)
+        return y_pred
+        
+def cost(y_true, y_pred):
+    loss = tf.losses.mean_squared_error(y_true, y_pred)
+    cost = tf.reduce_mean(loss)
+    return cost
+
+def grad(model, inputs, targets):
+    #print('shape of inputs : ',inputs.shape)
+    #targets = flatten_layer(targets)
+    with tf.GradientTape() as tape:    
+        reconstruction = model(inputs)
+        loss_value = cost(targets, reconstruction)
+    return loss_value, tape.gradient(loss_value, model.trainable_variables),reconstruction
