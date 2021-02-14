@@ -125,3 +125,30 @@ def grad(model, inputs, targets):
         reconstruction = model(inputs)
         loss_value = cost(targets, reconstruction)
     return loss_value, tape.gradient(loss_value, model.trainable_variables),reconstruction
+
+#>>>>>>>>>>>>>>>>>>>>>model application on the dataset<<<<<<<<<<<<<<<<<<
+model = AutoEncoder()
+optimizer = tf.keras.optimizers.RMSprop(learning_rate)
+
+for epoch in range(training_epochs):
+    for i in range(total_batch):
+        x_inp = x_train[i : i + batch_size]
+        loss_value, grads, reconstruction = grad(model, x_inp, x_inp)
+        optimizer.apply_gradients(zip(grads, model.trainable_variables))
+    # Display logs per epoch step
+    if epoch % display_step == 0:
+        print("Epoch:", '%04d' % (epoch+1),
+              "cost=", "{:.9f}".format(loss_value))
+
+print("Optimization Finished!")
+
+# Applying encode and decode over test set
+encode_decode = model(flatten_layer(x_image_test[:examples_to_show]))
+
+# Compare original images with their reconstructions
+f, a = plt.subplots(2, 10, figsize=(10, 2))
+for i in range(examples_to_show):
+    a[0][i].imshow(np.reshape(x_image_test[i], (28, 28)))
+    a[1][i].imshow(np.reshape(encode_decode[i], (28, 28)))
+
+plt.show()
